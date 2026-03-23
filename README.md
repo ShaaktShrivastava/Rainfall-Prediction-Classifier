@@ -1,41 +1,32 @@
 # Rainfall Prediction Classifier - Australian Weather Dataset
 
-A machine learning project that predicts whether it will rain tomorrow using historical weather observations from Australia (2008–2017).
+A machine learning project that predicts whether it will rain tomorrow using historical weather observations from Australia (2008–2017), served via a FastAPI web application.
 
 ## Dataset
 
 Source: [Australian Bureau of Meteorology](http://www.bom.gov.au/climate/dwo/) via [Kaggle](https://www.kaggle.com/datasets/jsphyg/weather-dataset-rattle-package/)
 
-The dataset contains daily weather observations across multiple Australian locations. This project focuses on the **Melbourne region** (Melbourne, Melbourne Airport, Watsonia).
+Filtered to the **Melbourne region** (Melbourne, MelbourneAirport, Watsonia). Dataset is fetched automatically from a public URL — no manual download needed.
 
-## Project Overview
+## Project Structure
 
-| Step | Description |
-|------|-------------|
-| Data Loading | Load dataset directly from URL |
-| Preprocessing | Drop missing values, rename columns, filter to Melbourne region |
-| Feature Engineering | Extract `Season` from `Date` column |
-| Modeling | Sklearn `Pipeline` with `ColumnTransformer` for preprocessing |
-| Optimization | `GridSearchCV` with `StratifiedKFold` cross-validation |
-| Evaluation | Classification report, confusion matrix, feature importances |
-| Comparison | Random Forest vs Logistic Regression |
+```
+├── FinalProject_AUSWeather_Final.ipynb  # EDA, modeling, evaluation
+├── train.py                             # Train and save model.pkl
+├── app.py                               # FastAPI prediction server
+├── templates/
+│   └── index.html                       # Browser UI
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
 
 ## Models
 
-- **Random Forest Classifier** — tuned via grid search over `n_estimators`, `max_depth`, `min_samples_split`
-- **Logistic Regression** — tuned via grid search over `solver`, `penalty`, `class_weight`
+- **Random Forest Classifier** — sklearn `Pipeline` with `ColumnTransformer` preprocessing (~84% accuracy)
+- **Logistic Regression** — comparison baseline (in notebook)
 
-## Requirements
-
-```
-numpy
-pandas
-matplotlib
-seaborn
-scikit-learn
-```
-
-Install with:
+## Setup
 
 ```bash
 pip install -r requirements.txt
@@ -43,14 +34,60 @@ pip install -r requirements.txt
 
 ## Usage
 
-Open and run the notebook top to bottom:
-
+**1. Train the model** — downloads data, trains, and saves `model.pkl`
 ```bash
-jupyter notebook FinalProject_AUSWeather_Final.ipynb
+python train.py
 ```
 
-All data is fetched automatically from a public URL — no manual download needed.
+**2. Start the API**
+```bash
+python -m uvicorn app:app --reload
+```
 
-## Results
+**3. Open in browser**
+```
+http://127.0.0.1:8000
+```
 
-Both models achieve ~84% accuracy on the test set. Random Forest generally outperforms Logistic Regression on the minority class (rain days), which are underrepresented (~22% of observations).
+Fill in the weather observation form and get a prediction with confidence score.
+Interactive API docs available at `http://127.0.0.1:8000/docs`.
+
+## API
+
+`POST /predict`
+
+Request body (JSON):
+```json
+{
+  "Location": "Melbourne",
+  "MinTemp": 10.0,
+  "MaxTemp": 22.0,
+  "Rainfall": 0.0,
+  "Evaporation": 5.0,
+  "Sunshine": 8.0,
+  "WindGustDir": "S",
+  "WindGustSpeed": 40.0,
+  "WindDir9am": "S",
+  "WindDir3pm": "S",
+  "WindSpeed9am": 15.0,
+  "WindSpeed3pm": 20.0,
+  "Humidity9am": 70.0,
+  "Humidity3pm": 50.0,
+  "Pressure9am": 1015.0,
+  "Pressure3pm": 1012.0,
+  "Cloud9am": 4.0,
+  "Cloud3pm": 4.0,
+  "Temp9am": 14.0,
+  "Temp3pm": 20.0,
+  "RainToday": "No",
+  "Season": "Winter"
+}
+```
+
+Response:
+```json
+{
+  "rain_tomorrow": "No",
+  "confidence": 0.87
+}
+```

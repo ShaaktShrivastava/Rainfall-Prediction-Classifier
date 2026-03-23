@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rain Predictor - Melbourne</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f0f4f8; color: #1a202c; }
+    header { background: #2b6cb0; color: white; padding: 1.5rem 2rem; }
+    header h1 { font-size: 1.4rem; }
+    header p  { font-size: 0.85rem; opacity: 0.85; margin-top: 0.25rem; }
+    main { max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; color: #4a5568; }
+    input, select { width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: #2b6cb0; box-shadow: 0 0 0 2px #bee3f8; }
+    button { background: #2b6cb0; color: white; border: none; padding: 0.7rem 2rem; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
+    button:hover { background: #2c5282; }
+    #result { display: none; padding: 1rem 1.5rem; border-radius: 8px; font-size: 1.1rem; font-weight: 600; text-align: center; }
+    .rain    { background: #bee3f8; color: #2a4365; border: 1px solid #90cdf4; }
+    .no-rain { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+    .error   { background: #fed7d7; color: #742a2a; border: 1px solid #fc8181; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🌧 Australian Weather — Rain Tomorrow Predictor</h1>
+  <p>Melbourne region · Random Forest Classifier</p>
+</header>
+<main>
+  <form id="weatherForm">
+    <div class="card">
+      <div class="grid">
+
+        <div>
+          <label>Location</label>
+          <select name="Location">
+            <option>Melbourne</option>
+            <option>MelbourneAirport</option>
+            <option>Watsonia</option>
+          </select>
+        </div>
+        <div>
+          <label>Season</label>
+          <select name="Season">
+            <option>Summer</option><option>Autumn</option>
+            <option>Winter</option><option>Spring</option>
+          </select>
+        </div>
+        <div><label>Min Temp (°C)</label><input type="number" step="0.1" name="MinTemp" value="10.0"/></div>
+        <div><label>Max Temp (°C)</label><input type="number" step="0.1" name="MaxTemp" value="22.0"/></div>
+        <div><label>Rainfall (mm)</label><input type="number" step="0.1" name="Rainfall" value="0.0"/></div>
+        <div><label>Evaporation (mm)</label><input type="number" step="0.1" name="Evaporation" value="5.0"/></div>
+        <div><label>Sunshine (hrs)</label><input type="number" step="0.1" name="Sunshine" value="8.0"/></div>
+        <div>
+          <label>Wind Gust Dir</label>
+          <select name="WindGustDir">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div><label>Wind Gust Speed (km/h)</label><input type="number" step="0.1" name="WindGustSpeed" value="40.0"/></div>
+        <div>
+          <label>Wind Dir 9am</label>
+          <select name="WindDir9am">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div>
+          <label>Wind Dir 3pm</label>
+          <select name="WindDir3pm">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div><label>Wind Speed 9am (km/h)</label><input type="number" step="0.1" name="WindSpeed9am" value="15.0"/></div>
+        <div><label>Wind Speed 3pm (km/h)</label><input type="number" step="0.1" name="WindSpeed3pm" value="20.0"/></div>
+        <div><label>Humidity 9am (%)</label><input type="number" step="0.1" name="Humidity9am" value="70.0"/></div>
+        <div><label>Humidity 3pm (%)</label><input type="number" step="0.1" name="Humidity3pm" value="50.0"/></div>
+        <div><label>Pressure 9am (hPa)</label><input type="number" step="0.1" name="Pressure9am" value="1015.0"/></div>
+        <div><label>Pressure 3pm (hPa)</label><input type="number" step="0.1" name="Pressure3pm" value="1012.0"/></div>
+        <div><label>Cloud 9am (oktas)</label><input type="number" step="0.1" name="Cloud9am" value="4.0"/></div>
+        <div><label>Cloud 3pm (oktas)</label><input type="number" step="0.1" name="Cloud3pm" value="4.0"/></div>
+        <div><label>Temp 9am (°C)</label><input type="number" step="0.1" name="Temp9am" value="14.0"/></div>
+        <div><label>Temp 3pm (°C)</label><input type="number" step="0.1" name="Temp3pm" value="20.0"/></div>
+        <div>
+          <label>Rain Today</label>
+          <select name="RainToday"><option>No</option><option>Yes</option></select>
+        </div>
+
+      </div>
+      <button type="submit">Predict</button>
+    </div>
+  </form>
+
+  <div id="result"></div>
+</main>
+
+<script>
+  document.getElementById("weatherForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = {};
+    fd.forEach((v, k) => {
+      const num = parseFloat(v);
+      body[k] = isNaN(num) || ["Location","Season","WindGustDir","WindDir9am","WindDir3pm","RainToday"].includes(k) ? v : num;
+    });
+
+    const res = document.getElementById("result");
+    res.style.display = "block";
+    res.className = "";
+    res.textContent = "Predicting…";
+
+    try {
+      const r = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || "Server error");
+      const willRain = data.rain_tomorrow === "Yes";
+      res.className = willRain ? "rain" : "no-rain";
+      res.textContent = willRain
+        ? `🌧 Rain expected tomorrow  (${(data.confidence * 100).toFixed(1)}% confidence)`
+        : `☀️ No rain tomorrow  (${(data.confidence * 100).toFixed(1)}% confidence)`;
+    } catch (err) {
+      res.className = "error";
+      res.textContent = "Error: " + err.message;
+    }
+  });
+</script>
+</body>
+</html>

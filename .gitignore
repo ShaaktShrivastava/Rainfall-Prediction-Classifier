@@ -23,6 +23,9 @@ ENV/
 # Data files (dataset is fetched from URL, no local copy needed)
 *.csv
 
+# Trained model artifacts (regenerate with: python train.py)
+*.pkl
+
 # OS
 .DS_Store
 Thumbs.db
