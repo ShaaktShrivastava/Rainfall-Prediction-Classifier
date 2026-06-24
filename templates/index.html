@@ -6,108 +6,664 @@
   <title>Rain Predictor - Melbourne</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: #f0f4f8; color: #1a202c; }
-    header { background: #2b6cb0; color: white; padding: 1.5rem 2rem; }
-    header h1 { font-size: 1.4rem; }
-    header p  { font-size: 0.85rem; opacity: 0.85; margin-top: 0.25rem; }
-    main { max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
-    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-    label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.3rem; color: #4a5568; }
-    input, select { width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.9rem; }
-    input:focus, select:focus { outline: none; border-color: #2b6cb0; box-shadow: 0 0 0 2px #bee3f8; }
-    button { background: #2b6cb0; color: white; border: none; padding: 0.7rem 2rem; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
-    button:hover { background: #2c5282; }
-    #result { display: none; padding: 1rem 1.5rem; border-radius: 8px; font-size: 1.1rem; font-weight: 600; text-align: center; }
-    .rain    { background: #bee3f8; color: #2a4365; border: 1px solid #90cdf4; }
-    .no-rain { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
-    .error   { background: #fed7d7; color: #742a2a; border: 1px solid #fc8181; }
+    
+    @keyframes gradient { 
+      0% { background-position: 0% 50%; } 
+      50% { background-position: 100% 50%; } 
+      100% { background-position: 0% 50%; } 
+    }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(-10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    @keyframes slideUp { 
+      from { opacity: 0; transform: translateY(30px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    @keyframes float { 
+      0%, 100% { transform: translateY(0px); } 
+      50% { transform: translateY(-10px); } 
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.6), 0 0 60px rgba(102, 126, 234, 0.4); }
+    }
+    
+    body { 
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(-45deg, #1e3a8a, #3730a3, #5b21b6, #6366f1, #0ea5e9, #06b6d4);
+      background-size: 400% 400%;
+      animation: gradient 20s ease infinite;
+      color: #1a202c; 
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      animation: float 15s ease-in-out infinite;
+    }
+    
+    header { 
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+      padding: 3rem 2rem;
+      text-align: center;
+      animation: fadeIn 0.8s ease-out;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.05), transparent);
+      animation: shimmer 3s infinite;
+    }
+    
+    header h1 { 
+      font-size: 3rem; 
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.02em;
+      position: relative;
+      text-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+    }
+    
+    header p { 
+      font-size: 1.1rem; 
+      color: #64748b; 
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    
+    main { 
+      max-width: 1200px; 
+      margin: 3rem auto; 
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .card { 
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 24px; 
+      padding: 2.5rem; 
+      box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 0 0 1px rgba(99, 102, 241, 0.05);
+      margin-bottom: 2rem;
+      animation: slideUp 0.8s ease-out;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
+    .card:hover { 
+      transform: translateY(-4px);
+      box-shadow: 
+        0 20px 60px rgba(99, 102, 241, 0.15),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 0 0 1px rgba(99, 102, 241, 0.1);
+    }
+    
+    .card:hover::before {
+      opacity: 1;
+    }
+    
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, #6366f1, #8b5cf6);
+      border-radius: 4px;
+      animation: glow 2s ease-in-out infinite;
+    }
+    
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+      gap: 1.75rem; 
+    }
+    
+    .input-group {
+      position: relative;
+      animation: fadeIn 0.6s ease-out backwards;
+    }
+    
+    .input-group:nth-child(1) { animation-delay: 0.05s; }
+    .input-group:nth-child(2) { animation-delay: 0.08s; }
+    .input-group:nth-child(3) { animation-delay: 0.11s; }
+    .input-group:nth-child(4) { animation-delay: 0.14s; }
+    .input-group:nth-child(5) { animation-delay: 0.17s; }
+    .input-group:nth-child(6) { animation-delay: 0.20s; }
+    
+    label { 
+      display: block; 
+      font-size: 0.875rem; 
+      font-weight: 600; 
+      margin-bottom: 0.6rem; 
+      color: #475569;
+      transition: all 0.3s ease;
+      letter-spacing: 0.01em;
+    }
+    
+    .input-group:focus-within label {
+      color: #6366f1;
+    }
+    
+    input, select { 
+      width: 100%; 
+      padding: 0.875rem 1rem; 
+      border: 2px solid #e2e8f0; 
+      border-radius: 12px; 
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      font-weight: 500;
+      color: #1e293b;
+    }
+    
+    input:focus, select:focus { 
+      outline: none; 
+      border-color: #6366f1; 
+      box-shadow: 
+        0 0 0 4px rgba(99, 102, 241, 0.1),
+        0 4px 12px rgba(99, 102, 241, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    input:hover, select:hover {
+      border-color: #cbd5e0;
+      background: #f8fafc;
+    }
+    
+    .input-group input[type="number"] {
+      font-variant-numeric: tabular-nums;
+    }
+    
+    button { 
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white; 
+      border: none; 
+      padding: 1.25rem 3rem; 
+      border-radius: 16px; 
+      font-size: 1.15rem; 
+      font-weight: 700;
+      cursor: pointer; 
+      margin-top: 0;
+      width: 100%;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.35),
+        0 0 0 0 rgba(99, 102, 241, 0.5);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.02em;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    button:hover { 
+      transform: translateY(-3px);
+      box-shadow: 
+        0 12px 32px rgba(99, 102, 241, 0.5),
+        0 0 0 0 rgba(99, 102, 241, 0.5);
+      animation: glow 1.5s ease-in-out infinite;
+    }
+    
+    button:active {
+      transform: translateY(-1px);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      animation: none;
+    }
+    
+    #result { 
+      display: none; 
+      padding: 2.5rem; 
+      border-radius: 20px; 
+      font-size: 1.5rem; 
+      font-weight: 700; 
+      text-align: center;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.01em;
+    }
+    
+    #result::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.8s;
+    }
+    
+    #result.show::before {
+      left: 100%;
+    }
+    
+    .rain { 
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #06b6d4 100%);
+      color: white;
+      box-shadow: 
+        0 12px 40px rgba(59, 130, 246, 0.4),
+        0 0 60px rgba(99, 102, 241, 0.3);
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1), glow 2s ease-in-out infinite;
+    }
+    
+    .no-rain { 
+      background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%);
+      color: white;
+      box-shadow: 
+        0 12px 40px rgba(245, 158, 11, 0.4),
+        0 0 60px rgba(239, 68, 68, 0.3);
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1), glow 2s ease-in-out infinite;
+    }
+    
+    .error { 
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b; 
+      border: 2px solid #f87171;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+    }
+    
+    .confidence-bar {
+      margin-top: 1.5rem;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) inset;
+    }
+    
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 1));
+      border-radius: 10px;
+      transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    
+    .quick-presets {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .preset-btn {
+      flex: 1;
+      min-width: 160px;
+      padding: 1rem 1.5rem;
+      border: 2px solid #e2e8f0;
+      background: white;
+      color: #475569;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .preset-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.1);
+      transform: translate(-50%, -50%);
+      transition: width 0.5s, height 0.5s;
+    }
+    
+    .preset-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .preset-btn:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+    }
+    
+    .preset-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .loading-container {
+      display: inline-block;
+      position: relative;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @media (max-width: 768px) {
+      header h1 { font-size: 2rem; }
+      header p { font-size: 0.95rem; }
+      .grid { grid-template-columns: 1fr; gap: 1.25rem; }
+      button { padding: 1.1rem 2rem; }
+      .card { padding: 1.75rem; }
+      #result { font-size: 1.2rem; }
+      .preset-btn { min-width: 100%; }
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
 <header>
-  <h1>🌧 Australian Weather — Rain Tomorrow Predictor</h1>
-  <p>Melbourne region · Random Forest Classifier</p>
+  <h1>🌧 Australian Weather Predictor</h1>
+  <p>Advanced ML-powered rain forecasting for Melbourne region</p>
 </header>
 <main>
+  <div class="card">
+    <div class="quick-presets">
+      <button type="button" class="preset-btn" onclick="applyPreset('sunny')">☀️ Sunny Day</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('rainy')">🌧️ Rainy Day</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('stormy')">⛈️ Stormy</button>
+      <button type="button" class="preset-btn" onclick="applyPreset('mild')">🌤️ Mild Weather</button>
+    </div>
+  </div>
+
   <form id="weatherForm">
     <div class="card">
+      <h2 class="section-title">📍 Location & Season</h2>
       <div class="grid">
-
-        <div>
-          <label>Location</label>
-          <select name="Location">
+        <div class="input-group">
+          <label>📍 Location</label>
+          <select name="Location" id="Location">
             <option>Melbourne</option>
             <option>MelbourneAirport</option>
             <option>Watsonia</option>
           </select>
         </div>
-        <div>
-          <label>Season</label>
-          <select name="Season">
+        <div class="input-group">
+          <label>🍂 Season</label>
+          <select name="Season" id="Season">
             <option>Summer</option><option>Autumn</option>
             <option>Winter</option><option>Spring</option>
           </select>
         </div>
-        <div><label>Min Temp (°C)</label><input type="number" step="0.1" name="MinTemp" value="10.0"/></div>
-        <div><label>Max Temp (°C)</label><input type="number" step="0.1" name="MaxTemp" value="22.0"/></div>
-        <div><label>Rainfall (mm)</label><input type="number" step="0.1" name="Rainfall" value="0.0"/></div>
-        <div><label>Evaporation (mm)</label><input type="number" step="0.1" name="Evaporation" value="5.0"/></div>
-        <div><label>Sunshine (hrs)</label><input type="number" step="0.1" name="Sunshine" value="8.0"/></div>
-        <div>
-          <label>Wind Gust Dir</label>
-          <select name="WindGustDir">
-            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
-            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
-            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
-            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
-          </select>
+        <div class="input-group">
+          <label>💧 Rain Today</label>
+          <select name="RainToday" id="RainToday"><option>No</option><option>Yes</option></select>
         </div>
-        <div><label>Wind Gust Speed (km/h)</label><input type="number" step="0.1" name="WindGustSpeed" value="40.0"/></div>
-        <div>
-          <label>Wind Dir 9am</label>
-          <select name="WindDir9am">
-            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
-            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
-            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
-            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
-          </select>
-        </div>
-        <div>
-          <label>Wind Dir 3pm</label>
-          <select name="WindDir3pm">
-            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
-            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
-            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
-            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
-          </select>
-        </div>
-        <div><label>Wind Speed 9am (km/h)</label><input type="number" step="0.1" name="WindSpeed9am" value="15.0"/></div>
-        <div><label>Wind Speed 3pm (km/h)</label><input type="number" step="0.1" name="WindSpeed3pm" value="20.0"/></div>
-        <div><label>Humidity 9am (%)</label><input type="number" step="0.1" name="Humidity9am" value="70.0"/></div>
-        <div><label>Humidity 3pm (%)</label><input type="number" step="0.1" name="Humidity3pm" value="50.0"/></div>
-        <div><label>Pressure 9am (hPa)</label><input type="number" step="0.1" name="Pressure9am" value="1015.0"/></div>
-        <div><label>Pressure 3pm (hPa)</label><input type="number" step="0.1" name="Pressure3pm" value="1012.0"/></div>
-        <div><label>Cloud 9am (oktas)</label><input type="number" step="0.1" name="Cloud9am" value="4.0"/></div>
-        <div><label>Cloud 3pm (oktas)</label><input type="number" step="0.1" name="Cloud3pm" value="4.0"/></div>
-        <div><label>Temp 9am (°C)</label><input type="number" step="0.1" name="Temp9am" value="14.0"/></div>
-        <div><label>Temp 3pm (°C)</label><input type="number" step="0.1" name="Temp3pm" value="20.0"/></div>
-        <div>
-          <label>Rain Today</label>
-          <select name="RainToday"><option>No</option><option>Yes</option></select>
-        </div>
-
       </div>
-      <button type="submit">Predict</button>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">🌡️ Temperature</h2>
+      <div class="grid">
+        <div class="input-group">
+          <label>Min Temp (°C)</label>
+          <input type="number" step="0.1" name="MinTemp" id="MinTemp" value="10.0" min="-10" max="50"/>
+        </div>
+        <div class="input-group">
+          <label>Max Temp (°C)</label>
+          <input type="number" step="0.1" name="MaxTemp" id="MaxTemp" value="22.0" min="-10" max="50"/>
+        </div>
+        <div class="input-group">
+          <label>Temp 9am (°C)</label>
+          <input type="number" step="0.1" name="Temp9am" id="Temp9am" value="14.0" min="-10" max="50"/>
+        </div>
+        <div class="input-group">
+          <label>Temp 3pm (°C)</label>
+          <input type="number" step="0.1" name="Temp3pm" id="Temp3pm" value="20.0" min="-10" max="50"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">💨 Wind Conditions</h2>
+      <div class="grid">
+        <div class="input-group">
+          <label>Wind Gust Direction</label>
+          <select name="WindGustDir" id="WindGustDir">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Wind Gust Speed (km/h)</label>
+          <input type="number" step="0.1" name="WindGustSpeed" id="WindGustSpeed" value="40.0" min="0" max="200"/>
+        </div>
+        <div class="input-group">
+          <label>Wind Dir 9am</label>
+          <select name="WindDir9am" id="WindDir9am">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Wind Speed 9am (km/h)</label>
+          <input type="number" step="0.1" name="WindSpeed9am" id="WindSpeed9am" value="15.0" min="0" max="200"/>
+        </div>
+        <div class="input-group">
+          <label>Wind Dir 3pm</label>
+          <select name="WindDir3pm" id="WindDir3pm">
+            <option>N</option><option>NNE</option><option>NE</option><option>ENE</option>
+            <option>E</option><option>ESE</option><option>SE</option><option>SSE</option>
+            <option selected>S</option><option>SSW</option><option>SW</option><option>WSW</option>
+            <option>W</option><option>WNW</option><option>NW</option><option>NNW</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Wind Speed 3pm (km/h)</label>
+          <input type="number" step="0.1" name="WindSpeed3pm" id="WindSpeed3pm" value="20.0" min="0" max="200"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">☁️ Atmospheric Conditions</h2>
+      <div class="grid">
+        <div class="input-group">
+          <label>Rainfall (mm)</label>
+          <input type="number" step="0.1" name="Rainfall" id="Rainfall" value="0.0" min="0" max="500"/>
+        </div>
+        <div class="input-group">
+          <label>Evaporation (mm)</label>
+          <input type="number" step="0.1" name="Evaporation" id="Evaporation" value="5.0" min="0" max="100"/>
+        </div>
+        <div class="input-group">
+          <label>Sunshine (hrs)</label>
+          <input type="number" step="0.1" name="Sunshine" id="Sunshine" value="8.0" min="0" max="24"/>
+        </div>
+        <div class="input-group">
+          <label>Humidity 9am (%)</label>
+          <input type="number" step="0.1" name="Humidity9am" id="Humidity9am" value="70.0" min="0" max="100"/>
+        </div>
+        <div class="input-group">
+          <label>Humidity 3pm (%)</label>
+          <input type="number" step="0.1" name="Humidity3pm" id="Humidity3pm" value="50.0" min="0" max="100"/>
+        </div>
+        <div class="input-group">
+          <label>Pressure 9am (hPa)</label>
+          <input type="number" step="0.1" name="Pressure9am" id="Pressure9am" value="1015.0" min="900" max="1100"/>
+        </div>
+        <div class="input-group">
+          <label>Pressure 3pm (hPa)</label>
+          <input type="number" step="0.1" name="Pressure3pm" id="Pressure3pm" value="1012.0" min="900" max="1100"/>
+        </div>
+        <div class="input-group">
+          <label>Cloud 9am (oktas)</label>
+          <input type="number" step="0.1" name="Cloud9am" id="Cloud9am" value="4.0" min="0" max="8"/>
+        </div>
+        <div class="input-group">
+          <label>Cloud 3pm (oktas)</label>
+          <input type="number" step="0.1" name="Cloud3pm" id="Cloud3pm" value="4.0" min="0" max="8"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <button type="submit" id="predictBtn">🔮 Predict Rain Tomorrow</button>
     </div>
   </form>
 
-  <div id="result"></div>
+  <div id="result">
+    <div id="resultText"></div>
+    <div class="confidence-bar">
+      <div class="confidence-fill" id="confidenceFill"></div>
+    </div>
+  </div>
 </main>
 
 <script>
+  const presets = {
+    sunny: {
+      MinTemp: 15, MaxTemp: 28, Rainfall: 0, Evaporation: 7, Sunshine: 11,
+      WindGustSpeed: 30, WindSpeed9am: 10, WindSpeed3pm: 15,
+      Humidity9am: 55, Humidity3pm: 35, Pressure9am: 1018, Pressure3pm: 1016,
+      Cloud9am: 1, Cloud3pm: 2, Temp9am: 18, Temp3pm: 26, RainToday: "No", Season: "Summer"
+    },
+    rainy: {
+      MinTemp: 12, MaxTemp: 17, Rainfall: 15, Evaporation: 2, Sunshine: 2,
+      WindGustSpeed: 55, WindSpeed9am: 25, WindSpeed3pm: 30,
+      Humidity9am: 85, Humidity3pm: 80, Pressure9am: 1008, Pressure3pm: 1006,
+      Cloud9am: 7, Cloud3pm: 8, Temp9am: 13, Temp3pm: 16, RainToday: "Yes", Season: "Winter"
+    },
+    stormy: {
+      MinTemp: 10, MaxTemp: 16, Rainfall: 25, Evaporation: 1, Sunshine: 0,
+      WindGustSpeed: 75, WindSpeed9am: 35, WindSpeed3pm: 45,
+      Humidity9am: 90, Humidity3pm: 85, Pressure9am: 1002, Pressure3pm: 1000,
+      Cloud9am: 8, Cloud3pm: 8, Temp9am: 11, Temp3pm: 15, RainToday: "Yes", Season: "Autumn"
+    },
+    mild: {
+      MinTemp: 13, MaxTemp: 22, Rainfall: 1, Evaporation: 4, Sunshine: 6,
+      WindGustSpeed: 35, WindSpeed9am: 15, WindSpeed3pm: 18,
+      Humidity9am: 70, Humidity3pm: 55, Pressure9am: 1013, Pressure3pm: 1011,
+      Cloud9am: 4, Cloud3pm: 5, Temp9am: 16, Temp3pm: 20, RainToday: "No", Season: "Spring"
+    }
+  };
+
+  function applyPreset(type) {
+    const preset = presets[type];
+    Object.entries(preset).forEach(([key, value]) => {
+      const input = document.getElementById(key);
+      if (input) {
+        input.value = value;
+        input.style.transform = 'scale(1.05)';
+        setTimeout(() => input.style.transform = '', 200);
+      }
+    });
+  }
+
   document.getElementById("weatherForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const btn = document.getElementById("predictBtn");
     const fd = new FormData(e.target);
     const body = {};
     fd.forEach((v, k) => {
@@ -116,9 +672,16 @@
     });
 
     const res = document.getElementById("result");
+    const resultText = document.getElementById("resultText");
+    const confidenceFill = document.getElementById("confidenceFill");
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-container"><span class="loading"></span></span>';
+    
     res.style.display = "block";
     res.className = "";
-    res.textContent = "Predicting…";
+    resultText.textContent = "Analyzing weather patterns...";
+    confidenceFill.style.width = "0";
 
     try {
       const r = await fetch("/predict", {
@@ -128,15 +691,43 @@
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.detail || "Server error");
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const willRain = data.rain_tomorrow === "Yes";
-      res.className = willRain ? "rain" : "no-rain";
-      res.textContent = willRain
-        ? `🌧 Rain expected tomorrow  (${(data.confidence * 100).toFixed(1)}% confidence)`
-        : `☀️ No rain tomorrow  (${(data.confidence * 100).toFixed(1)}% confidence)`;
+      res.className = willRain ? "rain show" : "no-rain show";
+      
+      const emoji = willRain ? "🌧️" : "☀️";
+      const message = willRain ? "Rain Expected Tomorrow" : "No Rain Tomorrow";
+      const confPercent = (data.confidence * 100).toFixed(1);
+      
+      resultText.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">${emoji}</div>
+        <div>${message}</div>
+        <div style="font-size: 1rem; margin-top: 0.5rem; opacity: 0.9;">Confidence: ${confPercent}%</div>
+      `;
+      
+      setTimeout(() => {
+        confidenceFill.style.width = `${confPercent}%`;
+      }, 100);
+      
     } catch (err) {
       res.className = "error";
-      res.textContent = "Error: " + err.message;
+      resultText.textContent = "⚠️ Error: " + err.message;
+      confidenceFill.style.width = "0";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔮 Predict Rain Tomorrow';
     }
+  });
+
+  document.querySelectorAll('input, select').forEach(input => {
+    input.addEventListener('focus', function() {
+      this.parentElement.style.transform = 'translateY(-2px)';
+    });
+    input.addEventListener('blur', function() {
+      this.parentElement.style.transform = '';
+    });
   });
 </script>
 </body>
