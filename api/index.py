@@ -5,12 +5,20 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Literal
 from pathlib import Path
+import os
 
-BASE_DIR = Path(__file__).parent.parent
+# For Vercel serverless, we need to find files relative to the project root
+BASE_DIR = Path(__file__).parent.parent if os.path.exists(Path(__file__).parent.parent / "model.pkl") else Path("/var/task")
 
 app = FastAPI(title="Australian Weather Rain Predictor")
 
-pipeline = joblib.load(BASE_DIR / "model.pkl")
+# Load model with error handling
+try:
+    model_path = BASE_DIR / "model.pkl"
+    pipeline = joblib.load(model_path)
+except Exception as e:
+    print(f"Error loading model from {BASE_DIR}: {e}")
+    pipeline = None
 
 class WeatherInput(BaseModel):
     Location: Literal["Melbourne", "MelbourneAirport", "Watsonia"]
@@ -40,13 +48,21 @@ class WeatherInput(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 @app.get("/api", response_class=HTMLResponse)
 def index():
-    html_path = BASE_DIR / "templates" / "index.html"
-    return html_path.read_text(encoding="utf-8")
+    try:
+        html_path = BASE_DIR / "templates" / "index.html"
+        if not html_path.exists():
+            return HTMLResponse(content=f"<h1>Error: Template not found at {html_path}</h1><p>BASE_DIR: {BASE_DIR}</p>", status_code=500)
+        return html_path.read_text(encoding="utf-8")
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Error loading template</h1><p>{str(e)}</p><p>BASE_DIR: {BASE_DIR}</p>", status_code=500)
 
 
 @app.post("/api/predict")
 @app.post("/predict")
 def predict(data: WeatherInput):
+    if pipeline is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+    
     try:
         df = pd.DataFrame([data.model_dump()])
         prediction = pipeline.predict(df)[0]
@@ -62,4 +78,8 @@ def predict(data: WeatherInput):
 @app.get("/api/health")
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "model_loaded": pipeline is not None,
+        "base_dir": str(BASE_DIR)
+    }
