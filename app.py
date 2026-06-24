@@ -2,9 +2,11 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Literal
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).parent
 
@@ -39,7 +41,8 @@ class WeatherInput(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return (BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
+    html_path = BASE_DIR / "templates" / "index.html"
+    return html_path.read_text(encoding="utf-8")
 
 
 @app.post("/predict")
@@ -59,3 +62,7 @@ def predict(data: WeatherInput):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# Vercel handler
+handler = app
